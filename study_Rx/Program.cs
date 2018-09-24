@@ -13,6 +13,9 @@ namespace study_Rx
     {
         static void Main(string[] args)
         {
+            // Ovserberパターン
+            Main0();
+
             // ファクトリメソッド
             //---------------------------------
             // Return:特定の値
@@ -39,17 +42,58 @@ namespace study_Rx
         }
 
 
+        static void Main0()
+        {
+            // 監視されるオブジェクトを生成
+            var source = new NumberObservable();
+            // 監視者を生成
+            var sbscriber1 = source.Subscribe(new PrintObserver());
+            var sbscriber2 = source.Subscribe(new PrintObserver());
+
+            // 監視される人の処理を実行 
+            Console.WriteLine("## Execute(1)");
+            source.Execute(1);
+
+            // 片方を監視する人から解雇 
+            Console.WriteLine("## Dispose");
+            sbscriber2.Dispose();
+            // 再度処理を実行 
+            Console.WriteLine("## Execute(2)");
+            source.Execute(2);
+
+            // エラーを起こしてみる 
+            Console.WriteLine("## Execute(0)");
+            source.Execute(0);
+
+            // 完了通知 
+            // もう1つ監視役を追加して完了通知を行う 
+            var sbscriber3 = source.Subscribe(new PrintObserver());
+            Console.WriteLine("## Completed"); source.Completed();
+        }
+        static void Main0_1()
+        {
+            // 監視されるオブジェクトを生成
+            var source = new NumberObservable();
+            source.Subscribe(
+                (value) => { Console.WriteLine("OnNext({0}) called", value);            },
+                (e)     => { Console.WriteLine("OnError(Msg:{0}) called", e.Message);   },
+                ()      => { Console.WriteLine("OnCompleted() called");                 }
+            );
+
+        }
+
         static void Main1()
         {
             // ソースの生成
             var source = Observable.Return<int>(10);
 
             // 購読の開始
-            IDisposable subscription = source.Subscribe(
+            IDisposable subscription = source.Delay(new TimeSpan(0,0,3)).Subscribe(
                 (int i)       => { Console.WriteLine("OnNext():" + i.ToString()); },
                 (Exception e) => { Console.WriteLine("OnError():" + e.Message);   },
                 ()            => { Console.WriteLine("OnCompleted()");            }
             );
+            Thread.Sleep(4000);
 
             // 購読の停止
             subscription.Dispose();
