@@ -11,6 +11,10 @@ namespace study_Rx
 {
     class Program
     {
+        /// <summary>
+        /// Entry point
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             // Ovserberパターン
