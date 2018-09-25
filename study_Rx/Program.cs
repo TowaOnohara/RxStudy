@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace study_Rx
 {
@@ -17,6 +18,7 @@ namespace study_Rx
         /// <param name="args"></param>
         static void Main(string[] args)
         {
+            if (false) { 
             // Ovserberパターン
             Main0();
 
@@ -43,6 +45,11 @@ namespace study_Rx
 
             // Throw:OnErrorを意図的に実行できる。
             Main7();
+            }
+
+            // HOT and COLD
+            Main8_COLD();
+            Main8_HOT();
         }
 
 
@@ -237,6 +244,57 @@ namespace study_Rx
 
             subscription.Dispose();
         }
+
+        /// <summary>
+        /// HOT COLD
+        /// </summary>
+        public static void Main8_COLD()
+        {
+            // 1秒間隔で値を発行するIObservable<long>を生成
+            var source = Observable.Timer(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+
+            // 購読
+            var subscription1 = source.Subscribe(
+                i  => Console.WriteLine("{0:yyyy/MM/dd HH:mm:ss.FFF} 1##OnNext({1})", DateTime.Now, i),
+                ex => Console.WriteLine("1##OnError({0})", ex.Message),
+                () => Console.WriteLine("1##Completed()"));
+
+
+            Thread.Sleep(3000);
+
+            // 購読
+            var subscription2 = source.Subscribe(
+                i => Console.WriteLine("{0:yyyy/MM/dd HH:mm:ss.FFF} 2##OnNext({1})", DateTime.Now, i),
+                ex => Console.WriteLine("2##OnError({0})", ex.Message),
+                () => Console.WriteLine("2##Completed()"));
+
+
+            Console.ReadLine();
+            subscription1.Dispose();
+            subscription2.Dispose();            
+        }
+
+        public static void Main8_HOT()
+        {
+            var timer = new System.Timers.Timer(1000);
+            var source = Observable.FromEvent<ElapsedEventHandler, ElapsedEventArgs>(
+                //h => (s, e) => h(e),
+                (Action<ElapsedEventArgs> h) => 
+                {
+                    return ((s, e) => h(e));
+                },
+                h => timer.Elapsed += h,
+                h => timer.Elapsed -= h);
+         
+            // タイマー開始 
+            timer.Start();
+
+            // 購読
+
+            // 購読解除
+
+        }
+
 
     }
 }
